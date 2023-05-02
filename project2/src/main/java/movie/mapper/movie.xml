@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="movie">
+ <select id="list" resultType="movie">
+  select * 
+  from (select A.*, rownum as rn
+  from (select num,writer,subject,reg_date,readcount
+  ,filename,filesize,ip,show from movie order by num desc) A)
+   where rn between #{start} and #{end} and show='y'
+ </select>
+ 
+ <insert id="insert">
+  insert into movie
+  (num,writer,subject,content,ip,filename,filesize) 
+  values
+  ((select nvl(max(num)+1,1) from movie)
+  ,#{writer},#{subject}
+  ,#{content},#{ip},#{filename},#{filesize})
+ </insert>
+ 
+ <select id="view" resultType="movie">
+  select * from movie
+  where num=#{num}
+ </select>
+ 
+ <select id="getFileName" resultType="String">
+  select filename
+  from movie
+  where num=#{num}
+ </select>
+ 
+ <update id="readCount">
+  update movie set readcount=readcount+1 
+  where num=#{num}
+ </update>
+ 
+ <select id="edit" resultType="movie">
+  select * from movie
+  where num=#{num}
+ </select>
+ 
+ <update id="update">
+  update movie
+  set subject=#{subject}, content=#{content}
+  , filename=#{filename}, filesize=#{filesize}, ip=#{ip}
+  where num=#{num}
+ </update>
+ 
+ <update id="delete">
+  update movie set show='n' 
+  where num=#{num}
+ </update>
+ 
+ <select id="searchList" resultType="movie">
+  select num,writer,subject,reg_date,readcount,filename,filesize,ip,show
+  from movie
+  where ( writer like #{keyword}
+  or subject like #{keyword}
+  or content like #{keyword})
+  and show='y'
+  order by num desc
+ </select>
+ 
+ <select id="count" resultType="int">
+  select count(*) from movie
+ </select>
+ 
+ <select id="scoreList" resultType="movie.dto.MovieScoreDTO">
+  select * from score
+  where movie_num=#{num}
+ </select>
+ 
+ <insert id="scoreAdd">
+  insert into score
+  (score_num,movie_num,writer,content,score) values
+  ((select nvl(max(score_num)+1,1)from score)
+  , #{movie_num}, #{writer}, #{content}, #{score})
+ </insert>
+ 
+ <delete id="scoreDel">
+  delete from score where score_num=#{score_num}
+ </delete>
+ 
+ <select id="scoreAvg" resultType="double">
+  select avg(score) avg
+  from score
+  where movie_num=#{num}
+ </select>
+ 
+</mapper>
